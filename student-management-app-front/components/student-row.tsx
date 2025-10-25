@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { StudentEditForm } from "./student-edit-form"
 import { Edit2, Trash2 } from "lucide-react"
@@ -19,7 +19,7 @@ interface StudentRowProps {
   onRefresh: () => void
 }
 
-export function StudentRow({ student, onDelete, onRefresh }: StudentRowProps) {
+export const StudentRow: React.FC<StudentRowProps> = ({ student, onDelete, onRefresh }) => {
   const [isEditing, setIsEditing] = useState(false)
 
   if (isEditing) {

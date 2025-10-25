@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { StudentRow } from "./student-row"
 import { Pagination } from "./pagination"
@@ -133,14 +133,14 @@ export function StudentList() {
                   </td>
                 </tr>
               ) : (
-                students.map((student) => (
-                  <StudentRow
-                    key={student.id}
-                    student={student}
-                    onDelete={handleDelete}
-                    onRefresh={() => setRefreshTrigger((prev: number) => prev + 1)}
-                  />
-                ))
+                students.map((student, idx) =>
+                  React.createElement(StudentRow as React.JSXElementConstructor<any>, {
+                    key: student.id ?? idx,
+                    student,
+                    onDelete: handleDelete,
+                    onRefresh: () => setRefreshTrigger((prev: number) => prev + 1),
+                  })
+                )
               )}
             </tbody>
           </table>

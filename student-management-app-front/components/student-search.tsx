@@ -9,25 +9,22 @@ interface StudentSearchProps {
 }
 
 export function StudentSearch({ onSearch }: StudentSearchProps) {
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const formData = new FormData(e.currentTarget)
-    const searchTerm = formData.get('search') as string
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const searchTerm = e.target.value
     onSearch(searchTerm)
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2">
+    <div className="relative max-w-sm">
+      <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+        <Search className="h-4 w-4 text-muted-foreground" />
+      </div>
       <Input
         type="text"
-        name="search"
+        onChange={handleChange}
         placeholder="Search by name..."
-        className="max-w-sm"
+        className="pl-9"
       />
-      <Button type="submit" variant="outline">
-                        <Search className="h-4 w-4 mr-2" />
-        Search
-      </Button>
-    </form>
+    </div>
   )
 }

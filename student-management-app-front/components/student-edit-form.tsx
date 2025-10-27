@@ -5,23 +5,29 @@ import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Loader2 } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 interface Student {
   id: number
-  name: string
-  email: string
-  phone: string
-  address: string
+  nom: string
+  prenom: string
+  dateNaissance: string
 }
 
 interface StudentEditFormProps {
   student: Student
   onSuccess: () => void
-  onCancel: () => void
+  onClose: () => void
 }
 
-export function StudentEditForm({ student, onSuccess, onCancel }: StudentEditFormProps) {
+export function StudentEditForm({ student, onSuccess, onClose }: StudentEditFormProps) {
   const [formData, setFormData] = useState(student)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -38,8 +44,8 @@ export function StudentEditForm({ student, onSuccess, onCancel }: StudentEditFor
     try {
       setLoading(true)
       const API_BASE = (process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8080").replace(/\/+$/,'')
-      const response = await fetch(`${API_BASE}/api/students/${student.id}`, {
-        method: "PUT",
+      const response = await fetch(`${API_BASE}/api/save`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -59,41 +65,64 @@ export function StudentEditForm({ student, onSuccess, onCancel }: StudentEditFor
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Name</label>
-          <Input type="text" name="name" value={formData.name} onChange={handleChange} disabled={loading} />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Email</label>
-          <Input type="email" name="email" value={formData.email} onChange={handleChange} disabled={loading} />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Phone</label>
-          <Input type="tel" name="phone" value={formData.phone} onChange={handleChange} disabled={loading} />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Address</label>
-          <Input type="text" name="address" value={formData.address} onChange={handleChange} disabled={loading} />
-        </div>
-      </div>
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit Student</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid gap-4">
+            <div>
+              <Label>Nom</Label>
+              <Input
+                type="text"
+                name="nom"
+                value={formData.nom}
+                onChange={handleChange}
+                placeholder="Doe"
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <Label>Prénom</Label>
+              <Input
+                type="text"
+                name="prenom"
+                value={formData.prenom}
+                onChange={handleChange}
+                placeholder="John"
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <Label>Date de Naissance</Label>
+              <Input
+                type="date"
+                name="dateNaissance"
+                value={formData.dateNaissance?.split('T')[0]}
+                onChange={handleChange}
+                disabled={loading}
+              />
+            </div>
+          </div>
 
-      {error && (
-        <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-md text-sm text-destructive">
-          {error}
-        </div>
-      )}
+          {error && (
+            <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-md text-sm text-destructive">
+              {error}
+            </div>
+          )}
 
-      <div className="flex gap-2">
-        <Button type="submit" disabled={loading} className="bg-primary hover:bg-primary/90 gap-2">
-          {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-          {loading ? "Saving..." : "Save Changes"}
-        </Button>
-        <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
-          Cancel
-        </Button>
-      </div>
-    </form>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading} className="gap-2">
+              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+              {loading ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }

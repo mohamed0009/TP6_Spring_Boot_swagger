@@ -13,17 +13,15 @@ interface StudentFormProps {
 
 export function StudentForm({ onSuccess }: StudentFormProps) {
   interface FormDataType {
-    name: string
-    email: string
-    phone: string
-    address: string
+    nom: string
+    prenom: string
+    dateNaissance: string
   }
 
   const [formData, setFormData] = useState<FormDataType>({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
+    nom: "",
+    prenom: "",
+    dateNaissance: ""
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -37,7 +35,7 @@ export function StudentForm({ onSuccess }: StudentFormProps) {
     e.preventDefault()
     setError(null)
 
-    if (!formData.name || !formData.email || !formData.phone || !formData.address) {
+    if (!formData.nom || !formData.prenom || !formData.dateNaissance) {
       setError("All fields are required")
       return
     }
@@ -45,7 +43,7 @@ export function StudentForm({ onSuccess }: StudentFormProps) {
     try {
       setLoading(true)
       const API_BASE = (process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8080").replace(/\/+$/,'')
-      const response = await fetch(`${API_BASE}/api/students`, {
+      const response = await fetch(`${API_BASE}/api/save`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -57,7 +55,7 @@ export function StudentForm({ onSuccess }: StudentFormProps) {
         throw new Error("Failed to create student")
       }
 
-      setFormData({ name: "", email: "", phone: "", address: "" })
+      setFormData({ nom: "", prenom: "", dateNaissance: "" })
       onSuccess()
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
@@ -70,46 +68,34 @@ export function StudentForm({ onSuccess }: StudentFormProps) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Name</label>
+          <label className="block text-sm font-medium text-foreground mb-2">Nom</label>
           <Input
             type="text"
-            name="name"
-            value={formData.name}
+            name="nom"
+            value={formData.nom}
             onChange={handleChange}
-            placeholder="John Doe"
+            placeholder="Doe"
             disabled={loading}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Email</label>
-          <Input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="john@example.com"
-            disabled={loading}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Phone</label>
-          <Input
-            type="tel"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            placeholder="+1 (555) 000-0000"
-            disabled={loading}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Address</label>
+          <label className="block text-sm font-medium text-foreground mb-2">Prénom</label>
           <Input
             type="text"
-            name="address"
-            value={formData.address}
+            name="prenom"
+            value={formData.prenom}
             onChange={handleChange}
-            placeholder="123 Main St, City, State"
+            placeholder="John"
+            disabled={loading}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">Date de Naissance</label>
+          <Input
+            type="date"
+            name="dateNaissance"
+            value={formData.dateNaissance}
+            onChange={handleChange}
             disabled={loading}
           />
         </div>

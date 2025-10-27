@@ -7,10 +7,9 @@ import { Edit2, Trash2 } from "lucide-react"
 
 interface Student {
   id: number
-  name: string
-  email: string
-  phone: string
-  address: string
+  nom: string
+  prenom: string
+  dateNaissance: string
 }
 
 interface StudentRowProps {
@@ -41,10 +40,9 @@ export const StudentRow: React.FC<StudentRowProps> = ({ student, onDelete, onRef
 
   return (
     <tr className="border-b border-border hover:bg-muted/50 transition-colors">
-      <td className="px-6 py-4 text-sm font-medium text-foreground">{student.name}</td>
-      <td className="px-6 py-4 text-sm text-muted-foreground">{student.email}</td>
-      <td className="px-6 py-4 text-sm text-muted-foreground">{student.phone}</td>
-      <td className="px-6 py-4 text-sm text-muted-foreground truncate max-w-xs">{student.address}</td>
+      <td className="px-6 py-4 text-sm font-medium text-foreground">{student.nom}</td>
+      <td className="px-6 py-4 text-sm text-muted-foreground">{student.prenom}</td>
+      <td className="px-6 py-4 text-sm text-muted-foreground">{new Date(student.dateNaissance).toLocaleDateString()}</td>
       <td className="px-6 py-4 text-right">
         <div className="flex items-center justify-end gap-2">
           <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="gap-2">

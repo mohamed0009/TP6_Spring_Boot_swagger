@@ -2,28 +2,16 @@
 
 import React, { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
-import { StudentRow } from "./student-row"
 import { Pagination } from "./pagination"
 import { AlertCircle, Loader2 } from "lucide-react"
+import { StudentSearch } from "./student-search"
+import { StudentEditForm } from "./student-edit-form"
 
 interface Student {
   id: number
-  name: string
-  email: string
-  phone: string
-  address: string
-}
-
-interface PageResponse {
-  _embedded?: {
-    students: Student[]
-  }
-  page?: {
-    size: number
-    totalElements: number
-    totalPages: number
-    number: number
-  }
+  nom: string
+  prenom: string
+  dateNaissance: string
 }
 
 export function StudentList() {
@@ -34,6 +22,8 @@ export function StudentList() {
   const [pageSize, setPageSize] = useState(10)
   const [totalPages, setTotalPages] = useState(0)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null)
 
   useEffect(() => {
     fetchStudents()
@@ -44,20 +34,29 @@ export function StudentList() {
       setLoading(true)
       setError(null)
       const API_BASE = (process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8080").replace(/\/+$/,'')
-      const response = await fetch(`${API_BASE}/api/students?page=${currentPage}&size=${pageSize}`, {
+      const response = await fetch(`${API_BASE}/api/all`, {
         headers: {
           Accept: "application/json",
         },
       })
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch students: ${response.statusText}`)
+        throw new Error("Failed to fetch students")
       }
 
-      const data: PageResponse = await response.json()
-      const studentList = data._embedded?.students || []
-      setStudents(studentList)
-      setTotalPages(data.page?.totalPages || 0)
+      const data = await response.json()
+      const students = Array.isArray(data) ? data : []
+      
+      // Filter students based on search term
+      const filteredStudents = searchTerm
+        ? students.filter(student => 
+            student.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            student.prenom.toLowerCase().includes(searchTerm.toLowerCase())
+          )
+        : students
+      
+      setStudents(filteredStudents)
+      setTotalPages(Math.ceil(students.length / pageSize))
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
       setStudents([])
@@ -71,7 +70,7 @@ export function StudentList() {
 
     try {
       const API_BASE = (process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8080").replace(/\/+$/,'')
-      const response = await fetch(`${API_BASE}/api/students/${id}`, {
+      const response = await fetch(`${API_BASE}/api/delete/${id}`, {
         method: "DELETE",
       })
 
@@ -79,7 +78,7 @@ export function StudentList() {
         throw new Error("Failed to delete student")
       }
 
-  setRefreshTrigger((prev: number) => prev + 1)
+      setRefreshTrigger(prev => prev + 1)
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to delete student")
     }
@@ -111,43 +110,84 @@ export function StudentList() {
     )
   }
 
+  const handleSearch = (term: string) => {
+    setSearchTerm(term)
+    setRefreshTrigger(prev => prev + 1)
+  }
+
+  const handleEdit = (student: Student) => {
+    setEditingStudent(student)
+  }
+
   return (
     <div className="space-y-4">
+      <StudentSearch onSearch={handleSearch} />
       <Card className="border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-border bg-muted/50">
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Name</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Email</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Phone</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Address</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Nom</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Prénom</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Date de Naissance</th>
                 <th className="px-6 py-3 text-right text-sm font-semibold text-foreground">Actions</th>
               </tr>
             </thead>
             <tbody>
               {students.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
+                  <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">
                     No students found. Add one to get started!
                   </td>
                 </tr>
               ) : (
-                students.map((student, idx) =>
-                  React.createElement(StudentRow as React.JSXElementConstructor<any>, {
-                    key: student.id ?? idx,
-                    student,
-                    onDelete: handleDelete,
-                    onRefresh: () => setRefreshTrigger((prev: number) => prev + 1),
-                  })
-                )
+                students.map((student, idx) => (
+                  <tr key={student.id ?? idx} className="border-b border-border hover:bg-muted/50">
+                    <td className="px-6 py-4 text-sm font-medium text-foreground">{student.nom || '(No name)'}</td>
+                    <td className="px-6 py-4 text-sm text-muted-foreground">{student.prenom || '(No surname)'}</td>
+                    <td className="px-6 py-4 text-sm text-muted-foreground">
+                      {student.dateNaissance ? new Date(student.dateNaissance).toLocaleDateString() : '(No date)'}
+                    </td>
+                    <td className="px-6 py-4 text-right space-x-2">
+                      <button
+                        onClick={() => handleEdit(student)}
+                        className="text-blue-600 hover:text-blue-900 mr-2"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(student.id)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
         </div>
       </Card>
 
-      {totalPages > 1 && <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />}
+      {totalPages > 1 && (
+        <Pagination 
+          currentPage={currentPage} 
+          totalPages={totalPages} 
+          onPageChange={setCurrentPage} 
+        />
+      )}
+
+      {editingStudent && (
+        <StudentEditForm
+          student={editingStudent}
+          onClose={() => setEditingStudent(null)}
+          onSuccess={() => {
+            setEditingStudent(null)
+            setRefreshTrigger(prev => prev + 1)
+          }}
+        />
+      )}
     </div>
   )
 }
